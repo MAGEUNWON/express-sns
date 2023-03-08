@@ -18,8 +18,8 @@ module.exports = class Post extends Sequelize.Model {
       modelName: 'Post',
       tableName: 'posts',
       paranoid: false,
-      charset: 'utf8mb4',
-      collate: 'utf8b4_general_ci',
+      charset: 'utf8',
+      collate: 'utf8_general_ci',
     });
   }
   static associate(db) {

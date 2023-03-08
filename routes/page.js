@@ -1,15 +1,15 @@
 const express = require('express');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const {Post, User, Hashtag} = require('../models');
-const { hash } = require('bcrypt');
+// const bcrypt  = require('bcrypt');
 
 const router = express.Router();
 
 router.use((req, res, next) => {
   res.locals.user = req.user; // 넌적스에서 user 객체를 통해 사용자 정보에 접근할 수 있게 되었음.
-  res.locals.followerCount = req.user ? req.user.Followers.length : 0;
-  res.locals.followingCount = req.user ? req.user.Followings.length : 0;
-  res.locals.followerIdList = req.user ? req.user.Followings.map(f => f.id) : [];
+  res.locals.followerCount = req.user?.Followers?.length || 0;
+  res.locals.followingCount = req.user?.Followings?.length || 0;
+  res.locals.followerIdList = req.user?.Followings?.map(f => f.id) || [];
   next();
 });
 
@@ -21,13 +21,13 @@ router.get('/join', isNotLoggedIn, (req, res) => {
   res.render('join', {title: '회원가입 - NodeBird'});
 });
 
-router.get('/', (req, res, next) => {
-  const twits = [];
-  res.render('main', {
-    title: 'NodeBird',
-    twits,
-  });
-});
+// router.get('/', (req, res, next) => {
+//   const twits = [];
+//   res.render('main', {
+//     title: 'NodeBird',
+//     twits,
+//   });
+// });
 
 router.get('/', async(req, res, next)=>{
   try {
@@ -56,12 +56,12 @@ router.get('/hashtag', async (req, res, next)=>{
   try {
     const hashtag = await Hashtag.findOne({where: {title: query}});
     let posts = [];
-    if(hash) {
+    if(hashtag) {
       posts = await hashtag.getPosts({include: [{model: User}]});
     }
 
     return res.render('main', {
-      title: `{query} | NodeBird`,
+      title: `${query} | NodeBird`,
       twits: posts,
     });
   } catch(error) {
@@ -72,4 +72,3 @@ router.get('/hashtag', async (req, res, next)=>{
 
 module.exports = router;
 
-module.exports = router;

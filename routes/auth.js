@@ -37,25 +37,44 @@ router.post('/login', isNotLoggedIn, (req, res, next)=>{
     if(!user){
       return res.redirect(`./?loginError=${info.message}`);
     }
-    return res.redirect(user, (loginError)=>{
+    req.login(user, (loginError) =>{
       if(loginError) {
-        console.log(loginError);
+        console.error(loginError);
         return next(loginError);
       }
       return res.redirect('/');
     });
-  })(req, res, next); //미들웨어 내의 미들웨어에는 (req, res, next)를 붙임.
+  })(req, res, next);
 });
+//     return res.redirect(user, (loginError) =>{
+//       if(loginError) {
+//         console.error(loginError);
+//         return next(loginError);
+//       }
+//       return res.redirect('/');
+//     });
+//   })(req, res, next); //미들웨어 내의 미들웨어에는 (req, res, next)를 붙임.
+// });
+// req.login() 메서드를 사용하여 로그인합니다. 이 방법은 passport 모듈의 기본 제공 기능이므로 로그인 처리를 간편하게 할 수 있음.
+// res.redirect() 메서드는 더 이상 콜백 함수를 사용하지 않음. 따라서 로그인 오류가 발생하면 오류 처리 미들웨어(next)로 전달됨.
 
 //로그아웃 라우터. 
 router.get('/logout', isLoggedIn, (req, res)=> { //req.logout 메서드는 req.user 객체를 제거. req.session.distroy는 req.session 객체의 내용을 제거함. 세션 정보를 지운 후 메인 페이지로 되돌아감. 
-  req.logout();
-  req.session.destroy();
-  res.redirect('/');
+  req.logout(err => {
+    if(err) return next(err);
+    req.session.destroy(err => {
+      if(err) return next(err);
+      res.redirect('/');
+    })
+  });
+  // req.session.destroy();
+  // res.redirect('/');
 });
+//req.logout()에 콜백 함수를 전달해야 함. req.logout()은 현재 세션에서 사용자를 로그아웃하고 로그아웃 작업이 완료되면 콜백을 호출. req.logout()을 호출할 때 콜백을 지정하지 않으면 오류 발생함. 
+//콜백 함수가 에러를 처리하고 로그아웃 작업이 완료된 후 다음 단계를 처리함. 여기서는 세션을 파괴하고 메인 페이지로 리디렉션함. 
 
 //카카오 로그인 라우터
-router.get('/kakao', passport.authenticate('kakao'));  //GET /auth/kakao로 접근하면 카카오 로그인 과정이 시작됨. layout.html의 카카오톡 버튼에 /auth/kakao 링크가 붙어 있음. GET /auth/kakao에서 로그인 전략을 수행한ㄴ데, 처음에는 카카오 로그인 창으로 리다이렉트함. 그 창에서 로그인 후 성공 여부 결과를 GET /auth/kakao/callback으로 받음. 이 라우터에서는 카카오 로그인 전략을 다시 수행함. 
+router.get('/kakao', passport.authenticate('kakao'));  //GET /auth/kakao로 접근하면 카카오 로그인 과정이 시작됨. layout.html의 카카오톡 버튼에 /auth/kakao 링크가 붙어 있음. GET /auth/kakao에서 로그인 전략을 수행하는데, 처음에는 카카오 로그인 창으로 리다이렉트함. 그 창에서 로그인 후 성공 여부 결과를 GET /auth/kakao/callback으로 받음. 이 라우터에서는 카카오 로그인 전략을 다시 수행함. 
 
 router.get('/kakao/callback', passport.authenticate('kakao', {
   failureRedirect: '/',
